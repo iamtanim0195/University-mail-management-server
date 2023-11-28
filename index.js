@@ -3,11 +3,11 @@ const app = express();
 require('dotenv').config();
 const cors = require('cors');
 const cookieParser = require('cookie-parser');
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const jwt = require('jsonwebtoken');
 const morgan = require('morgan');
 const port = process.env.PORT || 8000;
-const uri =process.env.DB_URI;
+const uri = process.env.DB_URI;
 
 // middleware
 const corsOptions = {
@@ -15,10 +15,10 @@ const corsOptions = {
   credentials: true,
   optionSuccessStatus: 200,
 }
-app.use(cors(corsOptions))
-app.use(express.json())
-app.use(cookieParser())
-app.use(morgan('dev'))
+app.use(cors(corsOptions));
+app.use(express.json());
+app.use(cookieParser());
+app.use(morgan('dev'));
 const verifyToken = async (req, res, next) => {
   const token = req.cookies?.token
   console.log(token)
@@ -44,6 +44,7 @@ const client = new MongoClient(uri, {
 async function run() {
   try {
     const usersCollection = client.db('pro-12').collection('users');
+    const mealsCategoryCollection = client.db('pro-12').collection('mealsByCategory');
     // auth related api
     app.post('/jwt', async (req, res) => {
       const user = req.body
@@ -94,7 +95,17 @@ async function run() {
       )
       res.send(result)
     })
-
+    //get all Meals by category
+    app.get('/mealsCategory', async (req, res) => {
+      const result = await mealsCategoryCollection.find().toArray()
+      res.send(result)
+    })
+    //get single Meal by id
+    app.get('/mealsCategory/meal/:id', async (req, res) => {
+      const id = req.params.id
+      const result = await mealsCategoryCollection.findOne({_id: new ObjectId(id)})
+      res.send(result)
+    })
     // Send a ping to confirm a successful connection
     await client.db('admin').command({ ping: 1 })
     console.log(
